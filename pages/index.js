@@ -1,36 +1,8 @@
 // COMPONENTE REACT!
 import { Box, Button, Text, TextField, Image } from '@skynexui/components';
+import React from 'react';
+import { useRouter } from 'next/router';
 import appConfig from '../config.json';
-
-function GlobalStyle() {
-    return (
-        <style global jsx>{`
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-                list-style: none;
-            }
-            body {
-                font-family: 'Open Sans', sans-serif;
-            }
-            /* App fit Height */ 
-            html, body, #__next {
-                min-height: 100vh;
-                display: flex;
-                flex: 1;
-            }
-            #__next {
-                flex: 1;
-            }
-            #__next > * {
-                flex: 1;
-            }
-            /* ./App fit Height */ 
-        `}
-        </style>
-    );
-}
 
 function Title(props) {
     const Tag = props.tag || 'h1';
@@ -62,11 +34,13 @@ function Title(props) {
 export default HomePage */
 
 export default function PaginaInicial() {
-    const username = 'PhilipFelipe';
+    //const username = 'PhilipFelipe';
+    const [username, setUsername] = React.useState('PhilipFelipe');
+    const roteamento = useRouter();
+    const [validate, setValidate] = React.useState('none');
 
     return (
         <>
-            <GlobalStyle />
             <Box
                 styleSheet={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -91,19 +65,41 @@ export default function PaginaInicial() {
                     }}
                 >
                     {/* Formulário */}
-                    <Box    
+                    <Box
                         as="form"
+                        onSubmit={function (event) {
+                            event.preventDefault()
+                            roteamento.push('/chat');
+                            //window.location.href = '/chat';
+                        }}
                         styleSheet={{
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                             width: { xs: '100%', sm: '50%' }, textAlign: 'center', marginBottom: '32px',
                         }}
                     >
                         <Title tag="h2">Boas vindas ao Helpcord!</Title>
-                        <Text variant="body3" styleSheet={{ marginBottom: '32px', color: appConfig.theme.colors.neutrals['050']}}>
+                        <Text variant="body3" styleSheet={{ marginBottom: '32px', color: appConfig.theme.colors.neutrals['050'] }}>
                             {appConfig.name}
                         </Text>
 
-                        <TextField
+                        {/* <input type="text" value={username} onChange={function(event) {
+                            console.log('usuario digitou', event.target.value)
+                            //ONDE ESTÁ O VALOR?
+                            const value = event.target.value;
+                            //TROCAR A VARIÁVEL
+                            setUsername(value);
+
+                        }}
+                        /> */}
+                        <TextField value={username} onChange={function (event) {
+                            const value = event.target.value
+                            setUsername(value);
+                            if (value.length > 2) {
+                                setValidate('block');
+                            } else {
+                                setValidate('none');
+                            }
+                        }}
                             fullWidth
                             textFieldColors={{
                                 neutral: {
@@ -118,6 +114,9 @@ export default function PaginaInicial() {
                             type='submit'
                             label='Entrar'
                             fullWidth
+                            styleSheet={{
+                                display: `${validate}`
+                            }}
                             buttonColors={{
                                 contrastColor: appConfig.theme.colors.neutrals["000"],
                                 mainColor: appConfig.theme.colors.primary[500],
@@ -150,6 +149,7 @@ export default function PaginaInicial() {
                             styleSheet={{
                                 borderRadius: '50%',
                                 marginBottom: '16px',
+                                display: `${validate}`
                             }}
                             src={`https://github.com/${username}.png`}
                         />
