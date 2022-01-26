@@ -35,7 +35,7 @@ export default HomePage */
 
 export default function PaginaInicial() {
     //const username = 'PhilipFelipe';
-    const [username, setUsername] = React.useState('PhilipFelipe');
+    const [username, setUsername] = React.useState('');
     const roteamento = useRouter();
     const [validate, setValidate] = React.useState('none');
 
