@@ -1,10 +1,29 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import { createClient } from '@supabase/supabase-js'
+
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzI4OTY2NSwiZXhwIjoxOTU4ODY1NjY1fQ._xW6Viehvlc4RZ5RLlvb7mFZCbZVLrwJHLieHG7P-Aw'
+const SUPABASE_URL = 'https://grprtzicgtatjigqkdrj.supabase.co'
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
 
 export default function ChatPage() {
     const [mensagem, setMensagem] = React.useState('')
     const [listaMensagens, setListaMensagens] = React.useState([])
+
+    React.useEffect(() => {
+        supabaseClient
+            .from('mensagens')
+            .select('*')
+            .order('id', { ascending: false })
+            .then(({ data }) => {
+                console.log('Dados da consulta:', data)
+                setListaMensagens(data)
+            });
+    }, [])
+
+
 
     /* 
     // Usuário
@@ -22,16 +41,27 @@ export default function ChatPage() {
     function handleNewMessage(novaMensagem) {
         if (novaMensagem.length === 0) return
         const mensagem = {
-            id: listaMensagens.length + 1,
-            de: 'PhilipFelipe',
+            de: `PhilipFelipe`,
             texto: novaMensagem,
         };
         //Chamada de um back-end
-        setListaMensagens([
+        supabaseClient
+            .from('mensagens')
+            .insert([
+                mensagem
+            ])
+            .then(({ data }) => {
+                console.log('Criando Msg:', data)
+                setListaMensagens([
+                    data[0],
+                    ...listaMensagens,
+                ]);
+            })
+        /* setListaMensagens([
             mensagem,
             ...listaMensagens,
         ]);
-        setMensagem('')
+        setMensagem('') */
     }
 
     return (
@@ -105,6 +135,7 @@ export default function ChatPage() {
                                     event.preventDefault();
 
                                     handleNewMessage(mensagem);
+                                    setMensagem('')
                                 }
                             }}
                             placeholder="Insira sua mensagem aqui..."
@@ -122,7 +153,8 @@ export default function ChatPage() {
                             }}
                         />
                         <Button styleSheet={{ backgroundColor: 'green', color: 'white', height: '50px', width: '60px', display: 'flex', }} label="Enviar" onClick={(event) => {
-                            handleNewMessage(mensagem)
+                            handleNewMessage(mensagem);
+                            setMensagem('');
                         }}></Button>
                     </Box>
                 </Box>
@@ -146,6 +178,19 @@ function Header() {
                 />
             </Box>
         </>
+    )
+}
+
+function Profile() {
+    return (
+    <>
+        <div styleSheet={{
+            width: '200px', height: '200px',
+            backgroundColor: 'blue'
+        }}>
+
+        </div>
+    </>
     )
 }
 
@@ -192,7 +237,7 @@ function MessageList(props) {
                                     display: 'inline-block',
                                     marginRight: '8px',
                                 }}
-                                src={`https://github.com/vanessametonini.png`}
+                                src={`https://github.com/${mensagem.de}.png`}
                             />
                             <Text tag="strong">
                                 {mensagem.de}
