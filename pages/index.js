@@ -34,7 +34,6 @@ function Title(props) {
 export default HomePage */
 
 export default function PaginaInicial() {
-    //const username = 'PhilipFelipe';
     const [username, setUsername] = React.useState('');
     const roteamento = useRouter();
     const [validate, setValidate] = React.useState('none');
@@ -69,7 +68,7 @@ export default function PaginaInicial() {
                         as="form"
                         onSubmit={function (event) {
                             event.preventDefault()
-                            roteamento.push('/chat');
+                            roteamento.push(`/chat?username=${username}`);
                             //window.location.href = '/chat';
                         }}
                         styleSheet={{

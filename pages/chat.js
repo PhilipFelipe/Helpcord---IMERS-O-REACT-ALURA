@@ -1,16 +1,31 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
-import React from 'react';
 import appConfig from '../config.json';
 import { createClient } from '@supabase/supabase-js'
+import React from 'react';
+import { useRouter } from 'next/router';
+import { ButtonSendSticker } from '../src/components/BtnSendSticker';
 
+// SUPABASE CONFIG
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzI4OTY2NSwiZXhwIjoxOTU4ODY1NjY1fQ._xW6Viehvlc4RZ5RLlvb7mFZCbZVLrwJHLieHG7P-Aw'
 const SUPABASE_URL = 'https://grprtzicgtatjigqkdrj.supabase.co'
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+function EscutaMensagensEmTempoReal(adicionaMsg) {
+    return supabaseClient
+        .from('mensagens')
+        .on('INSERT', ( RespLive ) => {
+            adicionaMsg(RespLive.new)
+        })
+        .subscribe();
+}
 
 export default function ChatPage() {
-    const [mensagem, setMensagem] = React.useState('')
-    const [listaMensagens, setListaMensagens] = React.useState([])
+    const roteamento = useRouter();
+    const usuarioLogado = roteamento.query.username;
+    console.log(roteamento.query);
+    console.log('usuario logado:', usuarioLogado);
+    const [mensagem, setMensagem] = React.useState('');
+    const [listaMensagens, setListaMensagens] = React.useState([]);
 
     React.useEffect(() => {
         supabaseClient
@@ -21,6 +36,16 @@ export default function ChatPage() {
                 console.log('Dados da consulta:', data)
                 setListaMensagens(data)
             });
+
+            EscutaMensagensEmTempoReal((novaMensagem) => {
+                console.log('nova msg:', novaMensagem)
+                setListaMensagens((valorAtualDaLista) => {
+                    return [
+                        novaMensagem,
+                        ...valorAtualDaLista,
+                    ]
+                });
+            })
     }, [])
 
 
@@ -41,7 +66,7 @@ export default function ChatPage() {
     function handleNewMessage(novaMensagem) {
         if (novaMensagem.length === 0) return
         const mensagem = {
-            de: `PhilipFelipe`,
+            de: usuarioLogado,
             texto: novaMensagem,
         };
         //Chamada de um back-end
@@ -52,24 +77,17 @@ export default function ChatPage() {
             ])
             .then(({ data }) => {
                 console.log('Criando Msg:', data)
-                setListaMensagens([
-                    data[0],
-                    ...listaMensagens,
-                ]);
-            })
-        /* setListaMensagens([
-            mensagem,
-            ...listaMensagens,
-        ]);
-        setMensagem('') */
+            });
+
+        setMensagem('');
     }
 
     return (
         <Box
             styleSheet={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                backgroundColor: appConfig.theme.colors.primary[500],
-                backgroundImage: `url(https://virtualbackgrounds.site/wp-content/uploads/2020/08/the-matrix-digital-rain.jpg)`,
+                backgroundColor: appConfig.theme.colors.primary[100],
+                backgroundImage: `url(https://images.pexels.com/photos/3289880/pexels-photo-3289880.jpeg?cs=srgb&dl=pexels-andre-moura-3289880.jpg&fm=jpg)`,
                 backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundBlendMode: 'multiply',
                 color: appConfig.theme.colors.neutrals['000'],
                 overflow: 'hidden'
@@ -83,7 +101,7 @@ export default function ChatPage() {
                     flex: 1,
                     boxShadow: '0 2px 10px 0 rgb(0 0 0 / 20%)',
                     borderRadius: '5px',
-                    backgroundColor: appConfig.theme.colors.neutrals[700],
+                    backgroundColor: appConfig.theme.colors.neutrals[200],
                     height: '100%',
                     maxWidth: '95%',
                     maxHeight: '95vh',
@@ -98,7 +116,7 @@ export default function ChatPage() {
                         display: 'flex',
                         flex: 1,
                         height: '80%',
-                        backgroundColor: appConfig.theme.colors.neutrals[600],
+                        backgroundColor: appConfig.theme.colors.neutrals[400],
                         flexDirection: 'column',
                         borderRadius: '5px',
                         padding: '16px',
@@ -152,11 +170,23 @@ export default function ChatPage() {
                                 overflow: 'hidden'
                             }}
                         />
-                        <Button styleSheet={{ backgroundColor: 'green', color: 'white', height: '50px', width: '60px', display: 'flex', }} label="Enviar" onClick={(event) => {
-                            handleNewMessage(mensagem);
-                            setMensagem('');
-                        }}></Button>
+                        <Button styleSheet={{
+                            backgroundColor: 'green', color: 'white', height: '50px', width: '60px', display: 'flex',
+                            marginBottom: '10px'
+                        }}
+                            label="Enviar" onClick={() => {
+                                handleNewMessage(mensagem);
+                                setMensagem('');
+                            }}></Button>
                     </Box>
+                    {/* CALLBACK */}
+                    <ButtonSendSticker
+                        onStickerClick={(sticker) => {
+                            console.log('[USANDO O COMPONENTE] Salva esse sticker no banco', sticker)
+                            handleNewMessage(':sticker:' + sticker)
+                            
+                        }}
+                    />
                 </Box>
             </Box>
         </Box >
@@ -178,19 +208,6 @@ function Header() {
                 />
             </Box>
         </>
-    )
-}
-
-function Profile() {
-    return (
-    <>
-        <div styleSheet={{
-            width: '200px', height: '200px',
-            backgroundColor: 'blue'
-        }}>
-
-        </div>
-    </>
     )
 }
 
@@ -220,7 +237,7 @@ function MessageList(props) {
                             padding: '6px',
                             marginBottom: '12px',
                             hover: {
-                                backgroundColor: appConfig.theme.colors.neutrals[700],
+                                backgroundColor: appConfig.theme.colors.neutrals[200],
                             }
                         }}
                     >
@@ -231,15 +248,18 @@ function MessageList(props) {
                         >
                             <Image
                                 styleSheet={{
-                                    width: '20px',
-                                    height: '20px',
+                                    width: '30px',
+                                    height: '30px',
                                     borderRadius: '50%',
                                     display: 'inline-block',
                                     marginRight: '8px',
+                                    hover: {
+                                        width: '60px', height: '60px'
+                                    }
                                 }}
                                 src={`https://github.com/${mensagem.de}.png`}
                             />
-                            <Text tag="strong">
+                            <Text tag="strong" styleSheet={{ fontSize: '15px', color: 'skyblue' }}>
                                 {mensagem.de}
                             </Text>
                             <Text
@@ -253,7 +273,10 @@ function MessageList(props) {
                                 {(new Date().toLocaleDateString())}
                             </Text>
                         </Box>
-                        {mensagem.texto}
+                        {mensagem.texto.startsWith(':sticker:')
+                            ? <Image styleSheet={{maxWidth: '200px', maxHeight: '200px'}} src={mensagem.texto.replace(':sticker:', '')} /> : (mensagem.texto)}
+
+                        {/*mensagem.texto*/}
                     </Text>
                 );
             })}
